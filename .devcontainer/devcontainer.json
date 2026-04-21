@@ -1,0 +1,21 @@
+{
+  "name": "Docker-Workshop",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.10-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "enableNonRootDocker": "true",
+      "moby": "true"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-python.python"
+      ]
+    }
+  }
+}

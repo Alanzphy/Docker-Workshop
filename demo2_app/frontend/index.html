@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Taller Docker: App 3 Capas</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin-top: 50px; background-color: #f0f4f8; }
+        .card { background: white; padding: 3rem; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: inline-block; max-width: 500px; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        p { color: #7f8c8d; line-height: 1.5; }
+        #counter { font-size: 4rem; color: #3498db; font-weight: bold; margin: 30px 0; }
+        button { background-color: #2ecc71; color: white; border: none; padding: 15px 30px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: background 0.3s; font-weight: bold; }
+        button:hover { background-color: #27ae60; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Contador de Visitas</h1>
+        <p>Esta información viaja desde Nginx, pasa por una API en Python (FastAPI) y se guarda en PostgreSQL persistente.</p>
+        <div id="counter">--</div>
+        <button onclick="fetchVisitas()">Registrar Visita</button>
+    </div>
+
+    <script>
+        const apiUrl = "/api/visitas";
+
+        async function fetchVisitas() {
+            try {
+                // Al hacer clic, Nginx intercepta /api/ y manda la petición al backend en Python
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                document.getElementById('counter').innerText = data.visitas;
+            } catch (error) {
+                document.getElementById('counter').innerText = "Error";
+                console.error("Error fetching data:", error);
+            }
+        }
+
+        // Cargar dato inicial
+        fetchVisitas();
+    </script>
+</body>
+</html>
