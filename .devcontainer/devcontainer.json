@@ -7,6 +7,25 @@
       "moby": "true"
     }
   },
+  "forwardPorts": [
+    3000,
+    8081,
+    5433
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Demo 1 - Grafana",
+      "onAutoForward": "notify"
+    },
+    "8081": {
+      "label": "Demo 2 - Mantenimiento",
+      "onAutoForward": "notify"
+    },
+    "5433": {
+      "label": "Demo 2 - PostgreSQL",
+      "onAutoForward": "silent"
+    }
+  },
   "customizations": {
     "vscode": {
       "settings": {

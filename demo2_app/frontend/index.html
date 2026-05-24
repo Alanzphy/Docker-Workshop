@@ -2,42 +2,277 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Taller Docker: App 3 Capas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller Docker: Registro de Mantenimiento</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin-top: 50px; background-color: #f0f4f8; }
-        .card { background: white; padding: 3rem; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); display: inline-block; max-width: 500px; }
-        h1 { color: #2c3e50; margin-bottom: 5px; }
-        p { color: #7f8c8d; line-height: 1.5; }
-        #counter { font-size: 4rem; color: #3498db; font-weight: bold; margin: 30px 0; }
-        button { background-color: #2ecc71; color: white; border: none; padding: 15px 30px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; transition: background 0.3s; font-weight: bold; }
-        button:hover { background-color: #27ae60; }
+        :root {
+            color-scheme: light;
+            --bg: #eef3f6;
+            --panel: #ffffff;
+            --ink: #1f2933;
+            --muted: #64748b;
+            --line: #d9e2ec;
+            --accent: #0f766e;
+            --accent-dark: #115e59;
+            --warning: #b45309;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        main {
+            width: min(1100px, calc(100% - 32px));
+            margin: 32px auto;
+        }
+
+        header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: clamp(1.6rem, 3vw, 2.5rem);
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        button {
+            border: 0;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            min-height: 44px;
+            padding: 0 18px;
+        }
+
+        button:hover {
+            background: var(--accent-dark);
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.7;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        #total {
+            color: var(--accent);
+            font-size: 5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 18px 0 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid var(--line);
+            padding: 12px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .tag {
+            display: inline-block;
+            min-width: 92px;
+            border-radius: 999px;
+            background: #ecfdf5;
+            color: var(--accent-dark);
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 5px 8px;
+            text-align: center;
+        }
+
+        .empty {
+            color: var(--muted);
+            padding: 22px 10px;
+        }
+
+        .error {
+            color: var(--warning);
+            font-weight: 700;
+            margin-top: 12px;
+            min-height: 22px;
+        }
+
+        @media (max-width: 760px) {
+            header,
+            .grid {
+                grid-template-columns: 1fr;
+                display: grid;
+            }
+
+            header {
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            th:nth-child(1),
+            td:nth-child(1) {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Contador de Visitas</h1>
-        <p>Esta información viaja desde Nginx, pasa por una API en Python (FastAPI) y se guarda en PostgreSQL persistente.</p>
-        <div id="counter">--</div>
-        <button onclick="fetchVisitas()">Registrar Visita</button>
-    </div>
+    <main>
+        <header>
+            <div>
+                <h1>Registro de mantenimiento</h1>
+                <p>Eventos de la máquina industrial guardados en PostgreSQL.</p>
+            </div>
+            <button id="registerButton" onclick="registrarEvento()">Registrar evento</button>
+        </header>
+
+        <section class="grid">
+            <div class="panel">
+                <div class="metric-label">Eventos guardados</div>
+                <div id="total">--</div>
+                <p>Este número vive en la base de datos, no en el navegador.</p>
+                <div id="status" class="error"></div>
+            </div>
+
+            <div class="panel">
+                <div class="metric-label">Últimos eventos</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo</th>
+                            <th>Descripción</th>
+                            <th>Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events">
+                        <tr>
+                            <td colspan="4" class="empty">Cargando eventos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 
     <script>
-        const apiUrl = "/api/visitas";
+        const apiUrl = "/api/eventos";
+        const button = document.getElementById("registerButton");
+        const statusBox = document.getElementById("status");
 
-        async function fetchVisitas() {
+        function formatTime(value) {
+            return new Date(value).toLocaleTimeString("es-MX", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            });
+        }
+
+        function render(data) {
+            document.getElementById("total").innerText = data.total;
+            const tbody = document.getElementById("events");
+
+            if (!data.eventos.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty">Aún no hay eventos registrados.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.eventos.map((evento) => `
+                <tr>
+                    <td>${evento.id}</td>
+                    <td><span class="tag">${evento.tipo}</span></td>
+                    <td>${evento.descripcion}</td>
+                    <td>${formatTime(evento.creado_en)}</td>
+                </tr>
+            `).join("");
+        }
+
+        async function cargarEventos() {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error("No se pudo consultar la API");
+            }
+            render(await response.json());
+        }
+
+        async function registrarEvento() {
+            button.disabled = true;
+            statusBox.innerText = "";
+
             try {
-                // Al hacer clic, Nginx intercepta /api/ y manda la petición al backend en Python
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                document.getElementById('counter').innerText = data.visitas;
+                const response = await fetch(apiUrl, { method: "POST" });
+                if (!response.ok) {
+                    throw new Error("No se pudo registrar el evento");
+                }
+                render(await response.json());
             } catch (error) {
-                document.getElementById('counter').innerText = "Error";
-                console.error("Error fetching data:", error);
+                statusBox.innerText = error.message;
+            } finally {
+                button.disabled = false;
             }
         }
 
-        // Cargar dato inicial
-        fetchVisitas();
+        cargarEventos().catch((error) => {
+            document.getElementById("total").innerText = "Error";
+            statusBox.innerText = error.message;
+        });
     </script>
 </body>
 </html>
