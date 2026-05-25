@@ -79,7 +79,7 @@ cd ..
 Crear un contenedor que escribe un archivo dentro de sí mismo:
 
 ```bash
-docker run --name demo-efimero alpine sh -c "echo 'dato importante' > /dato.txt && cat /dato.txt"
+docker run --name demo alpine sh -c "echo 'dato importante' > /dato.txt && cat /dato.txt"
 ```
 
 Ver el contenedor detenido:
@@ -91,19 +91,21 @@ docker ps -a
 Borrar el contenedor:
 
 ```bash
-docker rm demo-efimero
+docker rm demo
 ```
 
-Crear otro contenedor e intentar leer el archivo:
+Crear otro contenedor con el mismo nombre e intentar leer el archivo:
 
 ```bash
-docker run --name demo-efimero-2 alpine sh -c "cat /dato.txt"
+docker run --name demo alpine sh -c "cat /dato.txt"
 ```
+
+Aunque se llame igual, es un contenedor nuevo. El archivo ya no existe porque vivía en el contenedor anterior.
 
 Limpiar:
 
 ```bash
-docker rm demo-efimero-2
+docker rm demo
 ```
 
 ### Con volumen
@@ -126,16 +128,18 @@ Borrar el contenedor:
 docker rm demo-volumen
 ```
 
-Crear otro contenedor usando el mismo volumen:
+Crear otro contenedor con el mismo nombre usando el mismo volumen:
 
 ```bash
-docker run --name demo-volumen-2 -v demo-data:/data alpine cat /data/dato.txt
+docker run --name demo-volumen -v demo-data:/data alpine cat /data/dato.txt
 ```
+
+Aunque el contenedor es nuevo, el archivo sí aparece porque vive en el volumen `demo-data`.
 
 Limpiar:
 
 ```bash
-docker rm demo-volumen-2
+docker rm demo-volumen
 docker volume rm demo-data
 ```
 
