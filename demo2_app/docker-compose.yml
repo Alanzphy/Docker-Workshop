@@ -34,6 +34,7 @@ services:
       - POSTGRES_DB=workshop
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      # - PGDATA=/tmp/postgres-data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d workshop"]
       interval: 5s
