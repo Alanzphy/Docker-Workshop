@@ -1,44 +1,38 @@
 # Taller Docker en Codespaces
 
-Repositorio para un taller práctico de Docker usando GitHub Codespaces. La idea es que los asistentes no instalen nada localmente: abren el Codespace, levantan servicios con `docker compose` y ven cómo Docker permite correr arquitecturas completas de forma repetible.
+Guía de comandos para seguir la práctica. La explicación y narrativa completa están en la guía del instructor; este README está pensado para que los asistentes puedan copiar y ejecutar sin batallar.
 
-## Qué se construye
+## 0. Preparar Codespaces
 
-**Demo 1: máquina industrial + monitoreo**
-
-Un simulador en Python genera señales industriales como temperatura, vibración, RPM, presión y producción. Los datos viajan por MQTT, Telegraf los guarda en InfluxDB y Grafana muestra el dashboard en vivo.
-
-**Demo 2: app de mantenimiento + persistencia**
-
-Una app web registra eventos de mantenimiento. El frontend corre en Nginx, la API en FastAPI y los datos se guardan en PostgreSQL usando un volumen de Docker.
-
-## Abrir el repo en Codespaces
-
-1. En GitHub, entra al repositorio.
-2. Presiona `Code`.
-3. Abre la pestaña `Codespaces`.
-4. Crea un Codespace nuevo.
-5. Espera a que VS Code termine de preparar el ambiente.
-
-Para confirmar que Docker está disponible:
+Confirma que Docker está disponible:
 
 ```bash
 docker --version
 docker compose version
 ```
 
-Si Codespaces abre un `Recovery Container` o muestra un error de firma GPG durante la creación del contenedor, reconstruye el Codespace después de traer la versión más reciente del repo. Este proyecto usa una imagen base Ubuntu limpia para evitar problemas con repositorios antiguos de Debian/Yarn.
+Ver contenedores activos:
 
-## Demo 1: telemetría industrial
+```bash
+docker ps
+```
 
-Levanta la arquitectura completa:
+Ver todos los contenedores, incluso detenidos:
+
+```bash
+docker ps -a
+```
+
+## 1. Demo 1: telemetría industrial
+
+Levanta el stack industrial:
 
 ```bash
 cd demo1_iot
 docker compose up -d --build
 ```
 
-En la pestaña `Ports` de Codespaces abre el puerto `3000`.
+Abre el puerto `3000` en Codespaces.
 
 Credenciales de Grafana:
 
@@ -47,69 +41,150 @@ Usuario: admin
 Password: admin
 ```
 
-El dashboard ya aparece provisionado con datos en vivo. Si al inicio se ve plano, espera un minuto y deja el rango de Grafana en los últimos 3 minutos para ver mejor las variaciones.
-
-Para ver las lecturas desde terminal:
+Ver logs del simulador:
 
 ```bash
 docker compose logs -f simulador
 ```
 
-Cuando termines la Demo 1, apágala para liberar memoria:
+Validar que InfluxDB tenga datos:
+
+```bash
+docker compose exec influxdb influx -database planta -execute 'SHOW MEASUREMENTS'
+docker compose exec influxdb influx -database planta -execute 'SELECT * FROM maquina_industrial ORDER BY time DESC LIMIT 3'
+```
+
+Apagar Demo 1:
 
 ```bash
 docker compose down
 ```
 
-## Demo 2: app con Dockerfile, red y volumen
-
-Si vienes de la Demo 1:
-
-```bash
-cd ../demo2_app
-docker compose up -d --build
-```
-
-Si estás en la raíz del repo, usa `cd demo2_app` antes de levantar los servicios.
-
-Abre el puerto `8081` en la pestaña `Ports` para usar la app web.
-
-También puedes abrir la API directamente en el puerto `8000` y agregar `/docs` al final de la URL:
-
-```text
-/docs
-```
-
-Ese endpoint muestra Swagger UI de FastAPI y sirve para enseñar que el backend es otro servicio dentro de la arquitectura.
-
-## Probar persistencia con volumen
-
-1. En la app web, registra algunos eventos.
-2. Apaga los contenedores:
-
-```bash
-docker compose down
-```
-
-3. Levántalos de nuevo:
-
-```bash
-docker compose up -d --build
-```
-
-4. Abre otra vez el puerto `8081`.
-
-Los eventos siguen ahí porque PostgreSQL guarda sus datos en el volumen `db-data`.
-
-Para borrar la base y empezar desde cero:
+Apagar y borrar volúmenes/datos:
 
 ```bash
 docker compose down -v
 ```
 
-## Conectar PostgreSQL con TablePlus
+Volver a la raíz:
 
-Con la Demo 2 levantada, la base usa estos datos:
+```bash
+cd ..
+```
+
+## 2. Demo 1.5: contenedores efímeros y volúmenes
+
+### Sin volumen
+
+Crear un contenedor que escribe un archivo dentro de sí mismo:
+
+```bash
+docker run --name demo-efimero alpine sh -c "echo 'dato importante' > /dato.txt && cat /dato.txt"
+```
+
+Ver el contenedor detenido:
+
+```bash
+docker ps -a
+```
+
+Borrar el contenedor:
+
+```bash
+docker rm demo-efimero
+```
+
+Crear otro contenedor e intentar leer el archivo:
+
+```bash
+docker run --name demo-efimero-2 alpine sh -c "cat /dato.txt"
+```
+
+Limpiar:
+
+```bash
+docker rm demo-efimero-2
+```
+
+### Con volumen
+
+Crear un volumen:
+
+```bash
+docker volume create demo-data
+```
+
+Escribir un archivo en el volumen:
+
+```bash
+docker run --name demo-volumen -v demo-data:/data alpine sh -c "echo 'dato importante' > /data/dato.txt && cat /data/dato.txt"
+```
+
+Borrar el contenedor:
+
+```bash
+docker rm demo-volumen
+```
+
+Crear otro contenedor usando el mismo volumen:
+
+```bash
+docker run --name demo-volumen-2 -v demo-data:/data alpine cat /data/dato.txt
+```
+
+Limpiar:
+
+```bash
+docker rm demo-volumen-2
+docker volume rm demo-data
+```
+
+## 3. Demo 2: app de mantenimiento
+
+Entrar a la demo:
+
+```bash
+cd demo2_app
+```
+
+Levantar frontend, backend y PostgreSQL:
+
+```bash
+docker compose up -d --build
+```
+
+Abrir la app web en el puerto `8081`.
+
+Abrir la API en el puerto `8000` agregando `/docs` a la URL.
+
+Ver contenedores de la demo:
+
+```bash
+docker compose ps
+```
+
+Ver logs:
+
+```bash
+docker compose logs -f
+```
+
+Probar persistencia:
+
+```bash
+docker compose down
+docker compose up -d --build
+```
+
+Borrar contenedores y datos:
+
+```bash
+docker compose down -v
+```
+
+## 4. Revisar PostgreSQL con TablePlus
+
+Datos de conexión:
 
 ```text
 Host: localhost
@@ -120,19 +195,11 @@ Database: workshop
 Table: eventos_mantenimiento
 ```
 
-Si usas VS Code de escritorio conectado al Codespace, normalmente el puerto `5433` aparece como `localhost:5433` en tu Mac.
-
-Si usas Codespaces desde el navegador, TablePlus necesita un túnel TCP local. En tu Mac, con GitHub CLI:
+Si usas Codespaces desde el navegador, crea un túnel local con GitHub CLI:
 
 ```bash
 gh codespace list
 gh codespace ports forward 5433:5433 -c NOMBRE_DEL_CODESPACE
-```
-
-También puedes filtrar por repo:
-
-```bash
-gh codespace ports forward 5433:5433 -R USUARIO/REPO
 ```
 
 Si el puerto local `5433` está ocupado:
@@ -141,34 +208,82 @@ Si el puerto local `5433` está ocupado:
 gh codespace ports forward 5433:15433 -c NOMBRE_DEL_CODESPACE
 ```
 
-En ese caso, TablePlus usa `localhost` y puerto `15433`.
+En ese caso usa `localhost:15433` en TablePlus.
+
+## 5. Demo 3: n8n con volumen
+
+Si vienes de Demo 2:
+
+```bash
+cd ../demo3_n8n
+```
+
+Si estás en la raíz del repo:
+
+```bash
+cd demo3_n8n
+```
+
+Levantar n8n:
+
+```bash
+docker compose up -d
+```
+
+Abrir n8n en el puerto `5678`.
+
+Probar persistencia:
+
+```bash
+docker compose down
+docker compose up -d
+```
+
+Borrar n8n y su volumen:
+
+```bash
+docker compose down -v
+```
+
+Volver a la raíz:
+
+```bash
+cd ..
+```
 
 ## Puertos usados
 
-| Puerto | Servicio | Uso |
+| Puerto | Servicio | Demo |
 | --- | --- | --- |
-| `3000` | Grafana | Dashboard de Demo 1 |
-| `1883` | Mosquitto MQTT | Mensajes del simulador |
-| `8086` | InfluxDB | Base de series de tiempo |
-| `8081` | Nginx frontend | App web de Demo 2 |
-| `8000` | FastAPI backend | API y Swagger UI |
-| `5433` | PostgreSQL | Base de datos de mantenimiento |
+| `3000` | Grafana | Demo 1 |
+| `1883` | Mosquitto MQTT | Demo 1 |
+| `8086` | InfluxDB | Demo 1 |
+| `8081` | Nginx frontend | Demo 2 |
+| `8000` | FastAPI backend | Demo 2 |
+| `5433` | PostgreSQL | Demo 2 |
+| `5678` | n8n | Demo 3 |
 
-## Comandos útiles
+## Comandos rápidos
 
-Ver contenedores activos:
+Levantar una demo con Compose:
 
 ```bash
-docker ps
+docker compose up -d --build
 ```
 
-Ver logs de una demo:
+Ver servicios de una demo:
+
+```bash
+docker compose ps
+```
+
+Ver logs:
 
 ```bash
 docker compose logs -f
 ```
 
-Apagar una demo sin borrar datos:
+Apagar sin borrar volúmenes:
 
 ```bash
 docker compose down
