@@ -9,21 +9,39 @@
   },
   "forwardPorts": [
     3000,
+    8000,
     8081,
     5433
   ],
   "portsAttributes": {
     "3000": {
       "label": "Demo 1 - Grafana",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "protocol": "http"
+    },
+    "1883": {
+      "label": "Demo 1 - MQTT",
+      "onAutoForward": "silent"
+    },
+    "8000": {
+      "label": "Demo 2 - API FastAPI",
+      "onAutoForward": "silent",
+      "protocol": "http"
+    },
+    "8086": {
+      "label": "Demo 1 - InfluxDB",
+      "onAutoForward": "silent",
+      "protocol": "http"
     },
     "8081": {
       "label": "Demo 2 - Mantenimiento",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "protocol": "http"
     },
     "5433": {
       "label": "Demo 2 - PostgreSQL",
-      "onAutoForward": "silent"
+      "onAutoForward": "silent",
+      "requireLocalPort": false
     }
   },
   "customizations": {
@@ -33,7 +51,8 @@
       },
       "extensions": [
         "ms-azuretools.vscode-docker",
-        "ms-python.python"
+        "ms-python.python",
+        "redhat.vscode-yaml"
       ]
     }
   }
