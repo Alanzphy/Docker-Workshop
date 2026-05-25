@@ -6,8 +6,8 @@ datasources:
     type: influxdb
     access: proxy
     url: http://influxdb:8086
-    database: planta
     isDefault: true
     editable: true
     jsonData:
-      httpMode: GET
+      dbName: planta
+      httpMode: POST
