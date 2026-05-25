@@ -1,6 +1,6 @@
 {
   "name": "Docker-Workshop",
-  "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "enableNonRootDocker": "true",
@@ -51,7 +51,6 @@
       },
       "extensions": [
         "ms-azuretools.vscode-docker",
-        "ms-python.python",
         "redhat.vscode-yaml"
       ]
     }

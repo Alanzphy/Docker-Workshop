@@ -27,7 +27,7 @@ docker --version
 docker compose version
 ```
 
-Si Codespaces abre un `Recovery Container` o muestra un error de firma GPG durante la creación del contenedor, reconstruye el Codespace después de traer la versión más reciente del repo. Este proyecto usa una imagen base `bookworm` para evitar problemas con repositorios antiguos de Debian/Yarn.
+Si Codespaces abre un `Recovery Container` o muestra un error de firma GPG durante la creación del contenedor, reconstruye el Codespace después de traer la versión más reciente del repo. Este proyecto usa una imagen base Ubuntu limpia para evitar problemas con repositorios antiguos de Debian/Yarn.
 
 ## Demo 1: telemetría industrial
 
