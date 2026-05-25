@@ -76,33 +76,50 @@ cd ..
 
 ### Sin volumen
 
-Crear un contenedor que escribe un archivo dentro de sí mismo:
+Crear un contenedor interactivo en segundo plano:
 
 ```bash
-docker run --name demo alpine sh -c "echo 'dato importante' > /dato.txt && cat /dato.txt"
+docker run -dit --name demo alpine sh
 ```
 
-Ver el contenedor detenido:
+Entrar al contenedor:
 
 ```bash
-docker ps -a
+docker exec -it demo sh
+```
+
+Dentro del contenedor, crea y lee el archivo:
+
+```sh
+echo 'dato importante' > /dato.txt
+ls /
+cat /dato.txt
+exit
 ```
 
 Borrar el contenedor:
 
 ```bash
-docker rm demo
+docker rm -f demo
 ```
 
-Crear otro contenedor con el mismo nombre e intentar leer el archivo:
+Crear otro contenedor con el mismo nombre:
 
 ```bash
-docker run --name demo alpine sh -c "cat /dato.txt"
+docker run -it --name demo alpine sh
 ```
 
-Aunque se llame igual, es un contenedor nuevo. El archivo ya no existe porque vivía en el contenedor anterior.
+Dentro del nuevo contenedor, intenta leer el archivo:
 
-Limpiar:
+```sh
+ls /
+cat /dato.txt
+exit
+```
+
+Aunque se llame igual y use la misma imagen, es un contenedor nuevo. El archivo ya no existe porque vivía en el contenedor anterior.
+
+Limpiar el contenedor nuevo:
 
 ```bash
 docker rm demo
@@ -116,22 +133,45 @@ Crear un volumen:
 docker volume create demo-data
 ```
 
-Escribir un archivo en el volumen:
+Crear un contenedor con el volumen montado:
 
 ```bash
-docker run --name demo-volumen -v demo-data:/data alpine sh -c "echo 'dato importante' > /data/dato.txt && cat /data/dato.txt"
+docker run -dit --name demo-volumen -v demo-data:/data alpine sh
+```
+
+Entrar al contenedor:
+
+```bash
+docker exec -it demo-volumen sh
+```
+
+Dentro del contenedor, crea y lee el archivo en `/data`:
+
+```sh
+echo 'dato importante' > /data/dato.txt
+ls /data
+cat /data/dato.txt
+exit
 ```
 
 Borrar el contenedor:
 
 ```bash
-docker rm demo-volumen
+docker rm -f demo-volumen
 ```
 
 Crear otro contenedor con el mismo nombre usando el mismo volumen:
 
 ```bash
-docker run --name demo-volumen -v demo-data:/data alpine cat /data/dato.txt
+docker run -it --name demo-volumen -v demo-data:/data alpine sh
+```
+
+Dentro del nuevo contenedor, confirma que el archivo sigue ahí:
+
+```sh
+ls /data
+cat /data/dato.txt
+exit
 ```
 
 Aunque el contenedor es nuevo, el archivo sí aparece porque vive en el volumen `demo-data`.
